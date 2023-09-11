@@ -168,14 +168,23 @@ class ImageTextProcessor:
 
         D, I = index.search(embeddings_matrix, k)
 
-        threshold = threshold  
         similar_pairs = []
+        marked_items = set() 
 
         for i in range(I.shape[0]):
+            if i in marked_items:
+                continue
+
             similarities = 1 - D[i] / 2  
-            filtered_sample_ids = df_pandas.index[I[i][(similarities > threshold) & (I[i] != i)]].tolist()
+            potential_neighbors = I[i][similarities > threshold]
+            
+            filtered_sample_ids = [idx for idx in potential_neighbors if idx != i and idx not in marked_items]
+            
             if filtered_sample_ids:
-                similar_pairs.append((df_pandas.index[i], filtered_sample_ids))
+                similar_pairs.append((df_pandas.index[i], df_pandas.index[filtered_sample_ids].tolist()))
+                marked_items.add(i)
+                marked_items.update(filtered_sample_ids)
+    
 
         return similar_pairs
     
